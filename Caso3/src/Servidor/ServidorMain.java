@@ -1,4 +1,4 @@
-package seguridad20222_servidor;
+package Servidor;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,7 +8,7 @@ import java.util.Random;
 public class ServidorMain {
 	
 	private static ServerSocket ss;	
-	private static final String ID = "Main Server: ";
+	private static final String ID = "Cliente.Main Server: ";
 	private static int puerto = 4030;
 
 	public static void main(String[] args) throws IOException {

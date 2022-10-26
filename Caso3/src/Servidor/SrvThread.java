@@ -1,4 +1,4 @@
-package seguridad20222_servidor;
+package Servidor;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
