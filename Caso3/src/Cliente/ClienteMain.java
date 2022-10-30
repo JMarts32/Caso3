@@ -9,7 +9,7 @@ import java.net.Socket;
 public class ClienteMain {
 
     private static final int PORT = 4030; 
-    private static final String HOST = "localhoåst";
+    private static final String HOST = "localhost";
 
     public static void main(String[] args) {
 
@@ -24,7 +24,9 @@ public class ClienteMain {
             ds = new BufferedReader(new InputStreamReader(socket.getInputStream())); // read from server
             stdIn = new BufferedReader(new InputStreamReader(System.in));
 
+            System.out.println("Creating client thread...");
             ClientThread clientThread = new ClientThread(socket, as, ds, stdIn);
+            clientThread.start();
 
 
         } catch (Exception e) {
