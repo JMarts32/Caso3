@@ -1,6 +1,7 @@
 package Cliente;
 
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
@@ -41,14 +42,16 @@ public class ClientThread extends Thread {
 
         try {
 
-            System.out.println("Ingrese el número que desea enviarle al servidorL: ");
+            System.out.println("Ingrese el número que desea enviarle al servidor, debe estar entre 0 y 98: ");
             this.numberToSend = Integer.parseInt(this.stdIn.readLine());
+            if(this.numberToSend < 0 || this.numberToSend > 98) {
+                throw new NumberFormatException("Number is not in range");
+            }
             System.out.println("La consulta a mandar es: " + this.numberToSend);
 
 
             // * Step 0a: Read server's public key (K_W+)
             PublicKey publicKey = cF.read_kplus("Caso3/datos_asim_srv.pub", String.valueOf(this.id));
-
 
 
             // * Step 1: Client requests secure connection with server
@@ -111,41 +114,88 @@ public class ClientThread extends Thread {
                 String strMasterKey = masterKey.toString();
                 System.out.println("Client master key: " + strMasterKey);
 
+                System.out.println("ALL GOOD HERE :)");
                 // Generate secret encrypting key K_AB1
-                SecretKey K_AB1 = this.cF.csk1(strMasterKey);
-                SecretKey K_AB2 = this.cF.csk2(strMasterKey);
-                
+                SecretKey K_AB1_Srv = this.cF.csk1(strMasterKey);
+                SecretKey K_AB2_MAC = this.cF.csk2(strMasterKey);
+
+                // by me
+                System.out.println(K_AB1_Srv.toString());
+                System.out.println(K_AB2_MAC.toString());
+
+                // Generate IV1
+
+                byte[] iv1 = generateIvBytes();
+                String str_iv1 = byte2str(iv1);
+                IvParameterSpec ivSpec1 = new IvParameterSpec(iv1);
+
+
+                byte[] bytesNumberToSend = str2byte(String.valueOf(numberToSend));
+                System.out.println("Encrypting " + byte2str(bytesNumberToSend));
                 // * Step 8a: Send encrypted request C(K_AB1, <consulta>)
-
                 // * Step 8a: send HMAC(K_AB, <consulta>)
-
                 // * Step 8a: send iv1
 
-                // * Step 10: Recieve responde from server
+                byte[] encryptedResp = cF.senc(bytesNumberToSend, K_AB1_Srv, ivSpec1);
+                byte[] macResp = cF.hmac(bytesNumberToSend, K_AB2_MAC);
+
+                String strEncryp = byte2str(encryptedResp);
+                String strMacResp = byte2str(macResp);
+
+                as.println(strEncryp);
+                as.println(strMacResp);
+                as.println(str_iv1);
+
+                System.out.println("sent " + strEncryp + "  " + strMacResp + "  " + str_iv1);
+
+                // * Step 10: Recieve response from server
                 line = ds.readLine();
-                if(line.compareTo("ERROR") == 0) {
-                    //
-                } else if (line.compareTo("OK") == 0) {
+
+                System.out.println("Recieved: " + line);
+
+                if(line.compareTo("OK") == 0) {
+
+                    System.out.println("===========> Server verified request and sends responde and mac");
+
                     // * Step 11a: Recive C(K_AB1, <rta>
-
                     // * Step 11b: Recive HMAC(K_AB1, <rta>
-
                     // * Step 11c: Recive iv2
+                    String strResponse = ds.readLine();
+                    String strMAC = ds.readLine();
+                    String strIV2 = ds.readLine();
+
+                    byte[] bytesResponse = str2byte(strResponse);
+                    byte[] byteMAC = str2byte(strMAC);
+
+                    byte[] iv2 = str2byte(strIV2);
+                    IvParameterSpec ivSpec2 = new IvParameterSpec(iv2);
 
                     // * Step 12a: Verify C(K_AB1, <rta>) and  HMAC(K_AB1, <rta>
 
-                    // send OK | ERROR according to verification results
-                } else {
+                    byte[] decryptedResp = cF.sdec(bytesResponse, K_AB1_Srv, ivSpec2);
+                    boolean verify = cF.checkInt(decryptedResp, K_AB2_MAC, byteMAC);
+
+                    System.out.println("Client-- Integrity Check: " + verify);
+
+                    if(verify) {
+                        System.out.println("===========> Server sends matching query and MAC");
+                        as.println("OK");
+                    } else {
+                        System.out.println("===========> Server DOES NOT send matching query and MAC");
+                        as.println("ERROR");
+                    }
+
+
+                } else if(line.compareTo("ERROR") == 0) {
+                    System.out.println("===========> Query adn HMAC could not be verified");
 
                 }
+
             } else {
                 // Send ERROR to server
                 as.println("ERROR");
                 System.out.println("Could not verify G, P, G^x");
             }
-
-
-
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -186,6 +236,12 @@ public class ClientThread extends Thread {
 
     private BigInteger calcular_llave_maestra(BigInteger base, BigInteger exponente, BigInteger modulo) {
         return base.modPow(exponente, modulo);
+    }
+
+    private byte[] generateIvBytes() {
+        byte[] iv = new byte[16];
+        new SecureRandom().nextBytes(iv);
+        return iv;
     }
     
 }

@@ -4,7 +4,10 @@ package Cliente;
     Used SecurityFunctions.java from Server source code
  */
 
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +19,10 @@ import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 
 public class CSecurityFunctions {
+
+    private String algoritmo_simetrico = "AES/CBC/PKCS5Padding";
+    private String algoritmo_asimetrico = "RSA";
+
 
     public boolean checkSignature(PublicKey publica, byte[] firma, String mensaje) throws Exception {
         // * @Cliente Verifica F(K_w-, (G, P, G^x)) usando la llave publica del servidor K_w+
@@ -71,6 +78,41 @@ public class CSecurityFunctions {
         SecretKey sk = null;
         sk = new SecretKeySpec(encoded2,"AES");
         return sk;
+    }
+
+    public byte[] senc (byte[] msg, SecretKey key, IvParameterSpec iv) throws Exception {
+        Cipher decifrador = Cipher.getInstance(algoritmo_simetrico);
+        long start = System.nanoTime();
+        decifrador.init(Cipher.ENCRYPT_MODE, key, iv);
+        byte[] tmp = decifrador.doFinal(msg);
+        long end = System.nanoTime();
+        System.out.println("Client --- Elapsed Time for SYM encryption in nano seconds: "+ (end-start));
+        return tmp;
+    }
+
+    public byte[] sdec (byte[] msg, SecretKey key, IvParameterSpec iv) throws Exception {
+        Cipher decifrador = Cipher.getInstance(algoritmo_simetrico);
+        decifrador.init(Cipher.DECRYPT_MODE, key, iv);
+        return decifrador.doFinal(msg);
+    }
+
+    public byte[] hmac(byte[] msg, SecretKey key) throws Exception {
+        Mac mac = Mac.getInstance("HMACSHA256");
+        mac.init(key);
+        byte[] bytes = mac.doFinal(msg);
+        return bytes;
+    }
+
+    public boolean checkInt(byte[] msg, SecretKey key, byte [] hash ) throws Exception
+    {
+        byte [] nuevo = hmac(msg, key);
+        if (nuevo.length != hash.length) {
+            return false;
+        }
+        for (int i = 0; i < nuevo.length ; i++) {
+            if (nuevo[i] != hash[i]) return false;
+        }
+        return true;
     }
     
 }
