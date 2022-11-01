@@ -6,8 +6,10 @@ import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ClientThread extends Thread {
@@ -42,11 +44,19 @@ public class ClientThread extends Thread {
 
         try {
 
-            System.out.println("Ingrese el número que desea enviarle al servidor, debe estar entre 0 y 98: ");
-            this.numberToSend = Integer.parseInt(this.stdIn.readLine());
-            if(this.numberToSend < 0 || this.numberToSend > 98) {
-                throw new NumberFormatException("Number is not in range");
-            }
+            boolean validInput;
+
+            do {
+                validInput = true;
+                try {
+                    System.out.println("Ingrese el número que desea enviarle al servidor, debe estar entre 0 y 98: ");
+                    this.numberToSend = Integer.parseInt(this.stdIn.readLine());
+                } catch (NumberFormatException e) {
+                    validInput = false;
+                    System.out.println("Por favor ingrese un valro numérico");
+                }
+            } while (!validInput);
+
             System.out.println("La consulta a mandar es: " + this.numberToSend);
 
 
@@ -114,39 +124,34 @@ public class ClientThread extends Thread {
                 String strMasterKey = masterKey.toString();
                 System.out.println("Client master key: " + strMasterKey);
 
-                System.out.println("ALL GOOD HERE :)");
                 // Generate secret encrypting key K_AB1
                 SecretKey K_AB1_Srv = this.cF.csk1(strMasterKey);
                 SecretKey K_AB2_MAC = this.cF.csk2(strMasterKey);
 
-                // by me
-                System.out.println(K_AB1_Srv.toString());
-                System.out.println(K_AB2_MAC.toString());
-
                 // Generate IV1
-
                 byte[] iv1 = generateIvBytes();
                 String str_iv1 = byte2str(iv1);
                 IvParameterSpec ivSpec1 = new IvParameterSpec(iv1);
 
+                System.out.println("Generated the master key, K_AB1, K_AB2, and iv1");
 
-                byte[] bytesNumberToSend = str2byte(String.valueOf(numberToSend));
-                System.out.println("Encrypting " + byte2str(bytesNumberToSend));
+                byte[] bytesNumberToSend = String.valueOf(numberToSend).getBytes();
+                System.out.println("Encrypting " + new String(bytesNumberToSend, StandardCharsets.UTF_8));
+
                 // * Step 8a: Send encrypted request C(K_AB1, <consulta>)
                 // * Step 8a: send HMAC(K_AB, <consulta>)
                 // * Step 8a: send iv1
-
                 byte[] encryptedResp = cF.senc(bytesNumberToSend, K_AB1_Srv, ivSpec1);
                 byte[] macResp = cF.hmac(bytesNumberToSend, K_AB2_MAC);
 
                 String strEncryp = byte2str(encryptedResp);
                 String strMacResp = byte2str(macResp);
 
+                // Sending data to server
                 as.println(strEncryp);
                 as.println(strMacResp);
                 as.println(str_iv1);
 
-                System.out.println("sent " + strEncryp + "  " + strMacResp + "  " + str_iv1);
 
                 // * Step 10: Recieve response from server
                 line = ds.readLine();
@@ -155,7 +160,7 @@ public class ClientThread extends Thread {
 
                 if(line.compareTo("OK") == 0) {
 
-                    System.out.println("===========> Server verified request and sends responde and mac");
+                    System.out.println("===========> Server verified request and sends response and mac");
 
                     // * Step 11a: Recive C(K_AB1, <rta>
                     // * Step 11b: Recive HMAC(K_AB1, <rta>
@@ -171,30 +176,33 @@ public class ClientThread extends Thread {
                     IvParameterSpec ivSpec2 = new IvParameterSpec(iv2);
 
                     // * Step 12a: Verify C(K_AB1, <rta>) and  HMAC(K_AB1, <rta>
-
                     byte[] decryptedResp = cF.sdec(bytesResponse, K_AB1_Srv, ivSpec2);
                     boolean verify = cF.checkInt(decryptedResp, K_AB2_MAC, byteMAC);
 
-                    System.out.println("Client-- Integrity Check: " + verify);
+                    System.out.println("Client | Integrity Check: " + verify);
 
                     if(verify) {
                         System.out.println("===========> Server sends matching query and MAC");
                         as.println("OK");
+                        System.out.println("----------------------------------------------------");
+                        String decryptedAns = new String(decryptedResp, StandardCharsets.UTF_8);
+                        System.out.println("The server sent the following response=" + decryptedAns);
+                        System.out.println("The original request was=" + numberToSend + " | Verifying " + numberToSend + " + 1 = " + decryptedAns);
                     } else {
-                        System.out.println("===========> Server DOES NOT send matching query and MAC");
+                        System.out.println("===========> [Failed] Server DOES NOT send matching query and MAC");
                         as.println("ERROR");
                     }
 
 
                 } else if(line.compareTo("ERROR") == 0) {
-                    System.out.println("===========> Query adn HMAC could not be verified");
+                    System.out.println("===========> [Failed] Query adn HMAC could not be verified");
 
                 }
 
             } else {
                 // Send ERROR to server
                 as.println("ERROR");
-                System.out.println("Could not verify G, P, G^x");
+                System.out.println("===========> [Failed] Could not verify G, P, G^x");
             }
 
         } catch (Exception e) {
