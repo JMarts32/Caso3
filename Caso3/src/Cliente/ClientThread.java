@@ -46,16 +46,20 @@ public class ClientThread extends Thread {
 
             boolean validInput;
 
-            do {
-                validInput = true;
-                try {
-                    System.out.println("Ingrese el número que desea enviarle al servidor, debe estar entre 0 y 98: ");
-                    this.numberToSend = Integer.parseInt(this.stdIn.readLine());
-                } catch (NumberFormatException e) {
-                    validInput = false;
-                    System.out.println("Por favor ingrese un valro numérico");
-                }
-            } while (!validInput);
+            // User inputs request
+//            do {
+//                validInput = true;
+//                try {
+//                    System.out.println("Ingrese el número que desea enviarle al servidor, debe estar entre 0 y 98: ");
+//                    this.numberToSend = Integer.parseInt(this.stdIn.readLine());
+//                } catch (NumberFormatException e) {
+//                    validInput = false;
+//                    System.out.println("Por favor ingrese un valro numérico");
+//                }
+//            } while (!validInput);
+
+            // Random number selected for request
+            this.numberToSend = ThreadLocalRandom.current().nextInt(0, 1000);
 
             System.out.println("La consulta a mandar es: " + this.numberToSend);
 
