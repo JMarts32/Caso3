@@ -9,7 +9,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class ClientThread extends Thread {
@@ -46,26 +45,14 @@ public class ClientThread extends Thread {
 
             boolean validInput;
 
-            // User inputs request
-//            do {
-//                validInput = true;
-//                try {
-//                    System.out.println("Ingrese el número que desea enviarle al servidor, debe estar entre 0 y 98: ");
-//                    this.numberToSend = Integer.parseInt(this.stdIn.readLine());
-//                } catch (NumberFormatException e) {
-//                    validInput = false;
-//                    System.out.println("Por favor ingrese un valro numérico");
-//                }
-//            } while (!validInput);
 
             // Random number selected for request
             this.numberToSend = ThreadLocalRandom.current().nextInt(0, 1000);
-
             System.out.println("La consulta a mandar es: " + this.numberToSend);
 
 
             // * Step 0a: Read server's public key (K_W+)
-            PublicKey publicKey = cF.read_kplus("Caso3/datos_asim_srv.pub", String.valueOf(this.id));
+            PublicKey publicKey = cF.read_kplus("./datos_asim_srv.pub", String.valueOf(this.id));
 
 
             // * Step 1: Client requests secure connection with server
@@ -89,11 +76,11 @@ public class ClientThread extends Thread {
             line = ds.readLine();
             byte[] byte_auth = str2byte(line);
 
+
             // * Step 4: Verifiy F(K_W-, (G, P, G^x))
-            // g.toString()+","+p.toString()+","+str_valor_comun;
-            // TODO: revisar str_valor_comun
             String msg = g.toString()+","+p.toString()+","+g2x;
             boolean result = cF.checkSignature(publicKey, byte_auth, msg);
+
 
 
            // * Step 5: Send result of signature verification
@@ -102,6 +89,9 @@ public class ClientThread extends Thread {
                 as.println("OK");
                 System.out.println("G, P, G^x and the signature F(K_W-, (G, P, G^x)) were recieved and verified");
                 // PRINT message to usr
+
+
+                long starTimeGY = System.nanoTime();
 
                 // * Step 6a: Generate G^y
 
@@ -116,12 +106,17 @@ public class ClientThread extends Thread {
                 BigInteger sharedVal = G2X(g, clientBix, p);
                 String strSharedVal = sharedVal.toString();
 
+                long endTimeGY = System.nanoTime() - starTimeGY;
+                System.out.println("Tiempo para calcular G^Y " + endTimeGY);
+
                 System.out.println("Cliente y = G2X = " + strSharedVal);
 
                 // * Step 6b: Send G^y
                 as.println(strSharedVal);
 
                 // * Step 7a: Master key, Symm Key for encryption (K_AB1), Symm Key for HMAC (K_AB2), gen IV1
+
+
 
                 // Master key -- G2X ^ x mod p
                 BigInteger masterKey = calcular_llave_maestra(g2x, clientBix, p);
@@ -131,6 +126,7 @@ public class ClientThread extends Thread {
                 // Generate secret encrypting key K_AB1
                 SecretKey K_AB1_Srv = this.cF.csk1(strMasterKey);
                 SecretKey K_AB2_MAC = this.cF.csk2(strMasterKey);
+
 
                 // Generate IV1
                 byte[] iv1 = generateIvBytes();
@@ -159,6 +155,7 @@ public class ClientThread extends Thread {
 
                 // * Step 10: Recieve response from server
                 line = ds.readLine();
+
 
                 System.out.println("Recieved: " + line);
 

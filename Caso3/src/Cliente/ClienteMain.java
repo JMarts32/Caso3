@@ -1,10 +1,10 @@
 package Cliente;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class ClienteMain {
 
@@ -19,14 +19,23 @@ public class ClienteMain {
         BufferedReader stdIn = null;
 
         try {
-            socket = new Socket(HOST, PORT);
-            as = new PrintWriter(socket.getOutputStream(), true);  // write to server
-            ds = new BufferedReader(new InputStreamReader(socket.getInputStream())); // read from server
-            stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-            System.out.println("Creating client thread...");
-            ClientThread clientThread = new ClientThread(socket, as, ds, stdIn);
-            clientThread.start();
+            System.out.println("HOLA INGRESA:");
+            Scanner s = new Scanner(System.in);
+            int clie = s.nextInt();
+
+            for (int i =0; i <clie; i++) {
+                socket = new Socket(HOST, PORT);
+                as = new PrintWriter(socket.getOutputStream(), true);  // write to server
+                ds = new BufferedReader(new InputStreamReader(socket.getInputStream())); // read from server
+                stdIn = new BufferedReader(new InputStreamReader(System.in));
+
+
+                System.out.println("Creating client thread...");
+                ClientThread clientThread = new ClientThread(socket, as, ds, stdIn);
+                clientThread.start();
+            }
+
 
 
         } catch (Exception e) {

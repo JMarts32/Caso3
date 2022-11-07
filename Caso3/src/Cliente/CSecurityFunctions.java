@@ -25,11 +25,14 @@ public class CSecurityFunctions {
 
 
     public boolean checkSignature(PublicKey publica, byte[] firma, String mensaje) throws Exception {
+        long starTimeSig = System.nanoTime();
         // * @Cliente Verifica F(K_w-, (G, P, G^x)) usando la llave publica del servidor K_w+
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
         publicSignature.initVerify(publica);
         publicSignature.update(mensaje.getBytes(StandardCharsets.UTF_8));
         boolean isCorrect = publicSignature.verify(firma);
+        long endTimeSig = System.nanoTime() - starTimeSig;
+        System.out.println("TIME | TIME ELAPSED TO VERIFY THE SIGNATURE: " + endTimeSig);
         return isCorrect;
     }
 
@@ -97,9 +100,12 @@ public class CSecurityFunctions {
     }
 
     public byte[] hmac(byte[] msg, SecretKey key) throws Exception {
+        long startTimeAuth = System.nanoTime();
         Mac mac = Mac.getInstance("HMACSHA256");
         mac.init(key);
         byte[] bytes = mac.doFinal(msg);
+        long endTimeAuth = System.nanoTime() - startTimeAuth;
+        System.out.println("Tiempo para generar el codigo de autenticacion " + endTimeAuth);
         return bytes;
     }
 
