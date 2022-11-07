@@ -7,6 +7,8 @@
 
 Solution Repo for the third project.
 
+Para ejecutar los diferentes clientes se debe ingresar el parámetro por consola depues del mensaje: "ENTER THE NUMBER OF CLIENTS:" al ejecutar el main del cliente.
+
 un subdirectorio docs con un informe que incluya: (i) la descripción de la organización de los archivos en el zip, (ii) las instrucciones para correr el prototipo del cliente, incluyendo cómo correr los clientes de forma concurrente, (iii) las respuestas a las tareas 1 a 5.
 
 
