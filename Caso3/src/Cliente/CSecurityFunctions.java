@@ -32,7 +32,7 @@ public class CSecurityFunctions {
         publicSignature.update(mensaje.getBytes(StandardCharsets.UTF_8));
         boolean isCorrect = publicSignature.verify(firma);
         long endTimeSig = System.nanoTime() - starTimeSig;
-        System.out.println("TIME | TIME ELAPSED TO VERIFY THE SIGNATURE: " + endTimeSig);
+        System.out.println("CLIENT | Time elapsed to verify the signature: " + endTimeSig);
         return isCorrect;
     }
 
@@ -105,7 +105,7 @@ public class CSecurityFunctions {
         mac.init(key);
         byte[] bytes = mac.doFinal(msg);
         long endTimeAuth = System.nanoTime() - startTimeAuth;
-        System.out.println("Tiempo para generar el codigo de autenticacion " + endTimeAuth);
+        System.out.println("CLIENT | Time elapsed to generate HMAC: " + endTimeAuth);
         return bytes;
     }
 

@@ -20,11 +20,13 @@ public class ClienteMain {
 
         try {
 
+
             System.out.println("ENTER THE NUMBER OF CLIENTS: ");
             Scanner s = new Scanner(System.in);
-            int clie = s.nextInt();
+            int input = s.nextInt();
 
-            for (int i =0; i <clie; i++) {
+            // Creates a new socket and client depending on the clients on the input
+            for (int i =0; i <input; i++) {
                 socket = new Socket(HOST, PORT);
                 as = new PrintWriter(socket.getOutputStream(), true);  // write to server
                 ds = new BufferedReader(new InputStreamReader(socket.getInputStream())); // read from server

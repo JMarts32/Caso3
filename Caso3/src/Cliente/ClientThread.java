@@ -107,7 +107,7 @@ public class ClientThread extends Thread {
                 String strSharedVal = sharedVal.toString();
 
                 long endTimeGY = System.nanoTime() - starTimeGY;
-                System.out.println("Tiempo para calcular G^Y " + endTimeGY);
+                System.out.println("CLIENT | Time elapsed to calculate G^y: " + endTimeGY);
 
                 System.out.println("Cliente y = G2X = " + strSharedVal);
 
