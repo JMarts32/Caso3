@@ -20,7 +20,7 @@ public class ClienteMain {
 
         try {
 
-            System.out.println("HOLA INGRESA:");
+            System.out.println("ENTER THE NUMBER OF CLIENTS: ");
             Scanner s = new Scanner(System.in);
             int clie = s.nextInt();
 
