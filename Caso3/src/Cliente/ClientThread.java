@@ -36,15 +36,11 @@ public class ClientThread extends Thread {
     @Override
     public void run() {
 
-        boolean success = true;
         String line;
         System.out.println(id + " starting.");
         this.cF = new CSecurityFunctions();
 
         try {
-
-            boolean validInput;
-
 
             // Random number selected for request
             this.numberToSend = ThreadLocalRandom.current().nextInt(0, 1000);
